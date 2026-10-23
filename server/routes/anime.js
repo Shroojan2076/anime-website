@@ -1,6 +1,6 @@
 import express from "express";
 
-import db from "../config/database.js";
+import pool from "../db/database.js";
 
 import {
     getSearchState
@@ -37,7 +37,7 @@ router.get("/anime/:mal_id", async (req, res) => {
 
     try {
 
-        const [rows] = await db.execute(
+        const { rows } = await pool.query(
             `
             SELECT
                 anime.*,
@@ -49,7 +49,7 @@ router.get("/anime/:mal_id", async (req, res) => {
             FROM anime
             LEFT JOIN watchlist
                 ON watchlist.anime_id = anime.id
-            WHERE anime.mal_id = ?
+            WHERE anime.mal_id = $1
             `,
             [malId]
         );

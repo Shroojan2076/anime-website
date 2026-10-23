@@ -1,5 +1,5 @@
 import express from "express";
-import db from "../config/database.js";
+import pool from "../db/database.js";
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.post("/watchlist/add", async (req, res) => {
 
     try {
 
-        const [result] = await db.execute(
+        await pool.query(
             `
             INSERT INTO anime
             (
@@ -33,16 +33,16 @@ router.post("/watchlist/add", async (req, res) => {
                 start_date,
                 end_date
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                title = VALUES(title),
-                poster = VALUES(poster),
-                media_type = VALUES(media_type),
-                synopsis = VALUES(synopsis),
-                episodes = VALUES(episodes),
-                status = VALUES(status),
-                start_date = VALUES(start_date),
-                end_date = VALUES(end_date)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (mal_id) DO UPDATE SET
+                title = EXCLUDED.title,
+                poster = EXCLUDED.poster,
+                media_type = EXCLUDED.media_type,
+                synopsis = EXCLUDED.synopsis,
+                episodes = EXCLUDED.episodes,
+                status = EXCLUDED.status,
+                start_date = EXCLUDED.start_date,
+                end_date = EXCLUDED.end_date
             `,
             [
                 mal_id,
@@ -57,23 +57,22 @@ router.post("/watchlist/add", async (req, res) => {
             ]
         );
 
-        const [animeRows] = await db.execute(
-            "SELECT id FROM anime WHERE mal_id = ?",
+        const { rows: animeRows } = await pool.query(
+            "SELECT id FROM anime WHERE mal_id = $1",
             [mal_id]
         );
 
         const animeId = animeRows[0].id;
 
-        await db.execute(
+        await pool.query(
             `
             INSERT INTO watchlist
             (
                 anime_id,
                 status
             )
-            VALUES (?, 'plan_to_watch')
-            ON DUPLICATE KEY UPDATE
-                anime_id = anime_id
+            VALUES ($1, 'plan_to_watch')
+            ON CONFLICT (anime_id) DO NOTHING
             `,
             [animeId]
         );
@@ -97,7 +96,7 @@ router.get("/watchlist", async (req, res) => {
 
     try {
 
-        const [rows] = await db.execute(`
+        const { rows } = await pool.query(`
             SELECT
                 anime.id,
                 anime.mal_id,

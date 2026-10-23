@@ -1,6 +1,6 @@
 import { useState } from "react";
-import AnimeCard from "../components/AnimeCard";
-import { searchAnime, loadMoreAnime } from "./services/api";
+import AnimeCard from "../components/AnimeCard.jsx";
+import { searchAnime, loadMoreAnime } from "../services/api.js";
 
 function Home() {
   const [animeList, setAnimeList] = useState([]);
