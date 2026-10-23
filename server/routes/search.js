@@ -3,7 +3,6 @@ import { searchAnime, getNextPage } from "../services/mal.js";
 
 const router = express.Router();
 
-// GET / - Supports search via query param ?q=... or returns empty initial state
 router.get("/", async (req, res) => {
     const query = req.query.q || req.query.query;
 
@@ -25,7 +24,6 @@ router.get("/", async (req, res) => {
     }
 });
 
-// POST / - Search via request body
 router.post("/", async (req, res) => {
     const query = req.body["search-anime"] || req.body.query || req.body.q;
 
@@ -47,7 +45,6 @@ router.post("/", async (req, res) => {
     }
 });
 
-// GET /next - Stateless pagination using ?url=...
 router.get("/next", async (req, res) => {
     const nextUrl = req.query.url;
 

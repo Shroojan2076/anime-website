@@ -3,7 +3,6 @@ import pool from "../db/database.js";
 
 const router = express.Router();
 
-// GET /watchlist - Returns all watchlist items
 router.get("/watchlist", async (req, res) => {
     try {
         const { rows } = await pool.query(`
@@ -36,7 +35,6 @@ router.get("/watchlist", async (req, res) => {
     }
 });
 
-// POST /watchlist/add - Adds anime to watchlist
 router.post("/watchlist/add", async (req, res) => {
     const {
         mal_id,
@@ -57,7 +55,6 @@ router.post("/watchlist/add", async (req, res) => {
     }
 
     try {
-        // Upsert anime record
         const animeRes = await pool.query(
             `
             INSERT INTO anime
@@ -99,7 +96,6 @@ router.post("/watchlist/add", async (req, res) => {
 
         const animeId = animeRes.rows[0].id;
 
-        // Upsert into watchlist
         await pool.query(
             `
             INSERT INTO watchlist (anime_id, status, updated_at)
@@ -126,7 +122,6 @@ router.post("/watchlist/add", async (req, res) => {
     }
 });
 
-// PUT /watchlist/:mal_id - Updates status, episodes_watched, or score
 router.put("/watchlist/:mal_id", async (req, res) => {
     const malId = Number(req.params.mal_id);
     const { status, episodes_watched, score } = req.body;
@@ -171,7 +166,6 @@ router.put("/watchlist/:mal_id", async (req, res) => {
     }
 });
 
-// DELETE /watchlist/:mal_id - Removes anime from watchlist
 router.delete("/watchlist/:mal_id", async (req, res) => {
     const malId = Number(req.params.mal_id);
 

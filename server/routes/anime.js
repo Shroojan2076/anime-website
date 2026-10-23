@@ -13,7 +13,6 @@ router.get("/anime/:mal_id", async (req, res) => {
     }
 
     try {
-        // 1. Check local database for watchlist state
         const { rows: dbRows } = await pool.query(
             `
             SELECT
@@ -34,12 +33,10 @@ router.get("/anime/:mal_id", async (req, res) => {
 
         const dbRecord = dbRows[0] || null;
 
-        // 2. Fetch full anime metadata from MyAnimeList API
         try {
             const malData = await getAnimeDetails(malId);
 
             if (malData) {
-                // Merge MAL data with local watchlist status
                 const responseData = {
                     ...malData,
                     in_watchlist: !!dbRecord?.watchlist_id,
@@ -54,7 +51,7 @@ router.get("/anime/:mal_id", async (req, res) => {
             console.warn("MAL API fetch failed, checking database fallback:", malError.message);
         }
 
-        // 3. Fallback to DB record if MAL API failed or was unavailable
+
         if (dbRecord) {
             const fallbackData = {
                 id: dbRecord.mal_id,
