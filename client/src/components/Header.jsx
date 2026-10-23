@@ -1,6 +1,18 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 export default function Header() {
+  const [headerQuery, setHeaderQuery] = useState("");
+  const navigate = useNavigate();
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    if (!headerQuery.trim()) return;
+
+    navigate(`/?q=${encodeURIComponent(headerQuery.trim())}`);
+    setHeaderQuery("");
+  }
+
   return (
     <header>
       <div className="logo">
@@ -8,13 +20,28 @@ export default function Header() {
       </div>
 
       <nav>
-        <Link to="/">Home</Link>
-        <Link to="/watchlist">Watchlist</Link>
+        <NavLink
+          to="/"
+          className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+        >
+          Home
+        </NavLink>
+        <NavLink
+          to="/watchlist"
+          className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+        >
+          Watchlist
+        </NavLink>
       </nav>
 
-      <form>
-        <input type="text" placeholder="Search anime" required />
-
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={headerQuery}
+          onChange={(e) => setHeaderQuery(e.target.value)}
+          placeholder="Quick search..."
+          required
+        />
         <button type="submit">Search</button>
       </form>
     </header>
