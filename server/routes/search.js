@@ -14,189 +14,93 @@ import {
 
 const router = express.Router();
 
-
-// HOME PAGE
-
+// GET / - Returns current search results as JSON
 router.get("/", (req, res) => {
-
     const search = getSearchState();
-
-    res.render("index.ejs", {
+    res.json({
         data: search.results,
         nextUrl: search.nextUrl
     });
 });
 
-
-// NEW SEARCH
-
+// POST / - Executes a new search and returns results as JSON
 router.post("/", async (req, res) => {
-
-    const query = req.body["search-anime"];
+    // Supports both req.body["search-anime"] and req.body.query
+    const query = req.body["search-anime"] || req.body.query;
 
     if (!query || query.trim() === "") {
-
-        if (req.headers.accept?.includes("application/json")) {
-            return res.status(400).json({
-                error: "Search query is required"
-            });
-        }
-
-        return res.redirect("/");
+        return res.status(400).json({
+            error: "Search query is required"
+        });
     }
 
     try {
-
-        const result = await searchAnime(
-            query.trim()
-        );
-
-        if (!result) {
-
-            if (req.headers.accept?.includes("application/json")) {
-                return res.status(401).json({
-                    error: "MAL authentication required"
-                });
-            }
-
-            return res.redirect("/login");
-        }
+        const result = await searchAnime(query.trim());
 
         setSearchState({
             query: query.trim(),
-            results: result.data,
+            results: result.data || [],
             nextUrl: result.paging?.next || null
         });
 
         const search = getSearchState();
 
-        if (req.headers.accept?.includes("application/json")) {
-
-            return res.json({
-                data: search.results,
-                nextUrl: search.nextUrl
-            });
-        }
+        return res.json({
+            data: search.results,
+            nextUrl: search.nextUrl
+        });
 
     } catch (error) {
+        const status = error.response?.status || 500;
+        const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Something went wrong while searching.";
 
-        const status = error.response?.status;
+        console.error("Search API error:", status, errorMessage);
 
-        console.log(
-            "MAL API error:",
-            status,
-            error.response?.data || error.message
-        );
-
-        if (status === 429) {
-
-            if (req.headers.accept?.includes("application/json")) {
-                return res.status(429).json({
-                    error: "Too many requests. Please wait a moment."
-                });
-            }
-
-            return res.status(429).send(
-                "Too many requests. Please wait a moment."
-            );
-        }
-
-
-        if (status === 401) {
-
-            if (req.headers.accept?.includes("application/json")) {
-                return res.status(401).json({
-                    error: "MAL authentication required"
-                });
-            }
-
-            return res.redirect("/login");
-        }
-
-
-        if (req.headers.accept?.includes("application/json")) {
-            return res.status(500).json({
-                error: "Something went wrong while searching."
-            });
-        }
-
-        res.status(500).send(
-            "Something went wrong while searching."
-        );
+        return res.status(status).json({
+            error: errorMessage
+        });
     }
 });
 
-
-// LOAD MORE
-
+// GET /next - Loads the next page and returns updated list as JSON
 router.get("/next", async (req, res) => {
-
     const search = getSearchState();
 
     if (!search.nextUrl) {
-
-        if (req.headers.accept?.includes("application/json")) {
-            return res.status(400).json({
-                error: "There is no next page."
-            });
-        }
-
-        return res.redirect("/");
+        return res.status(400).json({
+            error: "There is no next page."
+        });
     }
 
     try {
+        const result = await getNextPage(search.nextUrl);
 
-        const result = await getNextPage(
-            search.nextUrl
-        );
-
-        if (!result) {
-
-            if (req.headers.accept?.includes("application/json")) {
-                return res.status(401).json({
-                    error: "MAL authentication required"
-                });
-            }
-
-            return res.redirect("/login");
-        }
-
-        appendSearchResults(result.data);
-
-        updateNextUrl(
-            result.paging?.next || null
-        );
+        appendSearchResults(result.data || []);
+        updateNextUrl(result.paging?.next || null);
 
         const updatedSearch = getSearchState();
 
-        if (req.headers.accept?.includes("application/json")) {
-
-            return res.json({
-                data: updatedSearch.results,
-                nextUrl: updatedSearch.nextUrl
-            });
-        }
+        return res.json({
+            data: updatedSearch.results,
+            nextUrl: updatedSearch.nextUrl
+        });
 
     } catch (error) {
+        const status = error.response?.status || 500;
+        const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Failed to load more anime.";
 
-        console.log(
-            "MAL API error:",
-            error.response?.status,
-            error.response?.data || error.message
-        );
+        console.error("Next page API error:", status, errorMessage);
 
-
-        if (req.headers.accept?.includes("application/json")) {
-            return res.status(500).json({
-                error: "Failed to load more anime."
-            });
-        }
-
-        res.status(500).send(
-            "Failed to load more anime."
-        );
+        return res.status(status).json({
+            error: errorMessage
+        });
     }
 });
-
 
 export default router;

@@ -3,8 +3,8 @@ import pool from "../db/database.js";
 
 const router = express.Router();
 
+// POST /watchlist/add - Adds/updates anime in watchlist and returns JSON
 router.post("/watchlist/add", async (req, res) => {
-
     const {
         mal_id,
         title,
@@ -17,8 +17,13 @@ router.post("/watchlist/add", async (req, res) => {
         end_date
     } = req.body;
 
-    try {
+    if (!mal_id || !title) {
+        return res.status(400).json({
+            error: "mal_id and title are required"
+        });
+    }
 
+    try {
         await pool.query(
             `
             INSERT INTO anime
@@ -77,25 +82,25 @@ router.post("/watchlist/add", async (req, res) => {
             [animeId]
         );
 
-        res.redirect(`/anime/${mal_id}?added=true`);
+        return res.json({
+            success: true,
+            message: "Added to watchlist",
+            mal_id: Number(mal_id),
+            anime_id: animeId
+        });
 
     } catch (error) {
+        console.error("Failed to add anime:", error.message);
 
-        console.error(
-            "Failed to add anime:",
-            error.message
-        );
-
-        res.status(500).send(
-            "Failed to add anime to library."
-        );
+        return res.status(500).json({
+            error: "Failed to add anime to library."
+        });
     }
 });
 
+// GET /watchlist - Returns all watchlist items as JSON
 router.get("/watchlist", async (req, res) => {
-
     try {
-
         const { rows } = await pool.query(`
             SELECT
                 anime.id,
@@ -113,20 +118,16 @@ router.get("/watchlist", async (req, res) => {
             ORDER BY watchlist.updated_at DESC
         `);
 
-        res.render("watchlist.ejs", {
+        return res.json({
             data: rows
         });
 
     } catch (error) {
+        console.error("Failed to load watchlist:", error.message);
 
-        console.error(
-            "Failed to load watchlist:",
-            error.message
-        );
-
-        res.status(500).send(
-            "Failed to load watchlist."
-        );
+        return res.status(500).json({
+            error: "Failed to load watchlist."
+        });
     }
 });
 
