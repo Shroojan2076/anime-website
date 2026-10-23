@@ -1,7 +1,6 @@
 import express from "express";
 
 import pool from "../db/database.js";
-import { getSearchState } from "../services/searchState.js";
 import { getAnimeDetails } from "../services/mal.js";
 
 const router = express.Router();
@@ -9,30 +8,17 @@ const router = express.Router();
 router.get("/anime/:mal_id", async (req, res) => {
     const malId = Number(req.params.mal_id);
 
-    if (isNaN(malId)) {
+    if (!malId || isNaN(malId)) {
         return res.status(400).json({ error: "Invalid anime ID" });
     }
 
-    /*
-     * 1. Check current search cache
-     */
-    const search = getSearchState();
-    const cachedAnime = search.results.find(
-        anime => anime.node.id === malId
-    );
-
-    if (cachedAnime) {
-        return res.json({ data: cachedAnime.node });
-    }
-
-    /*
-     * 2. Not in cache -> Check database
-     */
     try {
-        const { rows } = await pool.query(
+        // 1. Check local database for watchlist state
+        const { rows: dbRows } = await pool.query(
             `
             SELECT
                 anime.*,
+                watchlist.id AS watchlist_id,
                 watchlist.status AS watchlist_status,
                 watchlist.episodes_watched,
                 watchlist.score AS user_score,
@@ -46,52 +32,54 @@ router.get("/anime/:mal_id", async (req, res) => {
             [malId]
         );
 
-        if (rows.length > 0) {
-            const anime = rows[0];
+        const dbRecord = dbRows[0] || null;
 
-            const data = {
-                id: anime.mal_id,
-                title: anime.title,
-                main_picture: anime.poster
-                    ? {
-                        large: anime.poster
-                    }
-                    : null,
-                media_type: anime.media_type,
-                synopsis: anime.synopsis,
-                num_episodes: anime.episodes,
-                status: anime.status,
-                start_date: anime.start_date,
-                end_date: anime.end_date,
-                watchlist_status: anime.watchlist_status,
-                episodes_watched: anime.episodes_watched,
-                user_score: anime.user_score,
-                mean: null,
-                rank: null,
-                popularity: null,
-                genres: [],
-                studios: [],
-                alternative_titles: {}
-            };
+        // 2. Fetch full anime metadata from MyAnimeList API
+        try {
+            const malData = await getAnimeDetails(malId);
 
-            return res.json({ data });
+            if (malData) {
+                // Merge MAL data with local watchlist status
+                const responseData = {
+                    ...malData,
+                    in_watchlist: !!dbRecord?.watchlist_id,
+                    watchlist_status: dbRecord?.watchlist_status || null,
+                    episodes_watched: dbRecord?.episodes_watched ?? 0,
+                    user_score: dbRecord?.user_score ?? null
+                };
+
+                return res.json({ data: responseData });
+            }
+        } catch (malError) {
+            console.warn("MAL API fetch failed, checking database fallback:", malError.message);
         }
 
-        /*
-         * 3. Not in cache or database -> Fetch directly from MyAnimeList API
-         */
-        const malAnime = await getAnimeDetails(malId);
-        if (malAnime) {
-            return res.json({ data: malAnime });
+        // 3. Fallback to DB record if MAL API failed or was unavailable
+        if (dbRecord) {
+            const fallbackData = {
+                id: dbRecord.mal_id,
+                title: dbRecord.title,
+                main_picture: dbRecord.poster ? { large: dbRecord.poster } : null,
+                media_type: dbRecord.media_type,
+                synopsis: dbRecord.synopsis,
+                num_episodes: dbRecord.episodes,
+                status: dbRecord.status,
+                start_date: dbRecord.start_date,
+                end_date: dbRecord.end_date,
+                in_watchlist: !!dbRecord.watchlist_id,
+                watchlist_status: dbRecord.watchlist_status || null,
+                episodes_watched: dbRecord.episodes_watched ?? 0,
+                user_score: dbRecord.user_score ?? null,
+                genres: [],
+                studios: []
+            };
+
+            return res.json({ data: fallbackData });
         }
 
         return res.status(404).json({ error: "Anime not found." });
 
     } catch (error) {
-        if (error.response?.status === 404) {
-            return res.status(404).json({ error: "Anime not found." });
-        }
-
         console.error("Failed to load anime:", error.message);
         return res.status(500).json({ error: "Failed to load anime." });
     }
