@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { getWatchlist, updateWatchlistItem, removeFromWatchlist } from "../services/api";
 
@@ -14,6 +14,7 @@ const STATUS_TABS = [
 export default function Watchlist() {
   const [items, setItems] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -69,17 +70,50 @@ export default function Watchlist() {
     }
   }
 
-  const filteredItems = items.filter((item) => {
-    if (activeTab === "all") return true;
-    return item.status === activeTab;
-  });
+  const sortedAndFilteredItems = useMemo(() => {
+    const list = items.filter((item) => {
+      if (activeTab === "all") return true;
+      return item.status === activeTab;
+    });
+
+    return [...list].sort((a, b) => {
+      if (sortBy === "title_asc") {
+        return (a.title || "").localeCompare(b.title || "");
+      }
+      if (sortBy === "rating_desc") {
+        return (Number(b.score) || 0) - (Number(a.score) || 0);
+      }
+      if (sortBy === "episodes_desc") {
+        return (b.episodes_watched || 0) - (a.episodes_watched || 0);
+      }
+      // "recent" (default)
+      return new Date(b.updated_at || 0) - new Date(a.updated_at || 0);
+    });
+  }, [items, activeTab, sortBy]);
 
   return (
     <main>
       <section className="watchlist-page">
         <div className="watchlist-header">
-          <h1>My Watchlist</h1>
-          <span className="watchlist-count">{items.length} titles</span>
+          <div className="watchlist-title-area">
+            <h1>My Watchlist</h1>
+            <span className="watchlist-count">{items.length} titles</span>
+          </div>
+
+          {/* Clean, Uncluttered Sort Dropdown */}
+          <div className="sort-control">
+            <label htmlFor="watchlist-sort-select">Sort by:</label>
+            <select
+              id="watchlist-sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="recent">Recently Updated</option>
+              <option value="rating_desc">Rating (High to Low)</option>
+              <option value="title_asc">Title (A – Z)</option>
+              <option value="episodes_desc">Episodes Watched (Most)</option>
+            </select>
+          </div>
         </div>
 
         {/* Status Tabs */}
@@ -105,14 +139,14 @@ export default function Watchlist() {
         {error && <p className="error-message">{error}</p>}
 
         {/* Empty State */}
-        {!loading && filteredItems.length === 0 && (
+        {!loading && sortedAndFilteredItems.length === 0 && (
           <div className="empty-watchlist">
             <p>
               {items.length === 0
                 ? "Your watchlist is empty."
                 : `No anime found in "${STATUS_TABS.find((t) => t.id === activeTab)?.label}".`}
             </p>
-            <Link to="/" className="explore-link">
+            <Link to="/search" className="explore-link">
               Explore and search anime →
             </Link>
           </div>
@@ -120,7 +154,7 @@ export default function Watchlist() {
 
         {/* Watchlist Grid */}
         <div className="watchlist-grid">
-          {filteredItems.map((anime) => (
+          {sortedAndFilteredItems.map((anime) => (
             <article key={anime.mal_id} className="watchlist-card">
               <Link to={`/anime/${anime.mal_id}`} className="watchlist-poster-link">
                 <div className="anime-card-poster">

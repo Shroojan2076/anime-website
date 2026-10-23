@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 
 
 import Home from "./pages/Home";
+import Search from "./pages/Search";
 import AnimeDetails from "./pages/AnimeDetails";
 import Watchlist from "./pages/Watchlist";
 
@@ -15,6 +16,7 @@ function App() {
 
             <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/search" element={<Search />} />
                 <Route
                     path="/anime/:mal_id"
                     element={<AnimeDetails />}
