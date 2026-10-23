@@ -1,0 +1,77 @@
+<%- include("partials/head", {
+    title: "My Watchlist"
+}) %>
+
+<main>
+
+    <section class="watchlist-page">
+
+        <h1>My Watchlist</h1>
+
+        <% if (data.length === 0) { %>
+
+            <p class="empty-watchlist">
+                Your watchlist is empty.
+            </p>
+
+        <% } else { %>
+
+            <div class="watchlist-grid">
+
+                <% for (let anime of data) { %>
+
+                    <a
+                        class="anime-card-link"
+                        href="/anime/<%= anime.mal_id %>"
+                    >
+
+                        <article class="anime-card">
+
+                            <div class="anime-card-poster">
+
+                                <% if (anime.poster) { %>
+
+                                    <img
+                                        class="anime-card-image"
+                                        src="<%= anime.poster %>"
+                                        alt="<%= anime.title %>"
+                                    >
+
+                                <% } %>
+
+                                <span class="anime-type">
+                                    <%= anime.status.replaceAll("_", " ") %>
+                                </span>
+
+                            </div>
+
+                            <div class="anime-card-content">
+
+                                <h2>
+                                    <%= anime.title %>
+                                </h2>
+
+                                <p>
+                                    <%= anime.episodes_watched %>
+                                    /
+                                    <%= anime.episodes || "?" %>
+                                    episodes
+                                </p>
+
+                            </div>
+
+                        </article>
+
+                    </a>
+
+                <% } %>
+
+            </div>
+
+        <% } %>
+
+    </section>
+
+</main>
+
+<%- include("partials/footer") %>

@@ -1,0 +1,37 @@
+:root {
+
+    /* Colors */
+    --color-background: #0f1117;
+    --color-surface: #171a23;
+    --color-surface-hover: #202430;
+
+    --color-primary: #7c5cff;
+    --color-primary-hover: #6948e8;
+    
+    --color-text: #f5f5f5;
+    --color-text-muted: #9da3b4;
+    
+    --color-border: #292e3a;
+    --color-overlay: rgba(0, 0, 0, 0.75);
+
+
+    /* Typography */
+    --font-main: Arial, sans-serif;
+
+
+    /* Layout */
+    --content-width: 1200px;
+
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+
+    /* UI */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+
+}

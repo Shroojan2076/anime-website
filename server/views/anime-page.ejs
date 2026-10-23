@@ -1,0 +1,313 @@
+<%- include("partials/head", { title: data.title }) %>
+
+    <% if (typeof added !=="undefined" && added) { %>
+
+        <div class="watchlist-success">
+            ✓ Added to your watchlist
+        </div>
+
+        <% } %>
+
+            <main class="anime-detail">
+
+                <a class="back-link" href="/">
+                    ← Back to search
+                </a>
+
+
+                <!-- Hero -->
+
+                <section class="anime-hero">
+
+                    <div class="anime-detail-poster-container">
+
+                        <% if (data.main_picture) { %>
+
+                            <img class="anime-detail-poster" src="<%= data.main_picture.large %>"
+                                alt="<%= data.title %>">
+
+                            <% } %>
+
+                    </div>
+
+
+                    <div class="anime-detail-main">
+
+                        <div class="anime-detail-heading">
+
+                            <span class="detail-type">
+                                <%= data.media_type || "Unknown" %>
+                            </span>
+
+                            <h1>
+                                <%= data.title %>
+                            </h1>
+
+                            <% if (data.alternative_titles?.en) { %>
+
+                                <p class="alternative-title">
+                                    <%= data.alternative_titles.en %>
+                                </p>
+
+                                <% } %>
+
+                        </div>
+
+
+                        <!-- Quick information -->
+
+                        <div class="anime-stats">
+
+                            <div class="stat">
+                                <span class="stat-label">Score</span>
+
+                                <span class="stat-value">
+                                    <%= data.mean || "N/A" %>
+                                </span>
+                            </div>
+
+
+                            <div class="stat">
+                                <span class="stat-label">Rank</span>
+
+                                <span class="stat-value">
+                                    <%= data.rank ? "#" + data.rank : "N/A" %>
+                                </span>
+                            </div>
+
+
+                            <div class="stat">
+                                <span class="stat-label">Popularity</span>
+
+                                <span class="stat-value">
+                                    <%= data.popularity ? "#" + data.popularity : "N/A" %>
+                                </span>
+                            </div>
+
+
+                            <div class="stat">
+                                <span class="stat-label">Episodes</span>
+
+                                <span class="stat-value">
+                                    <%= data.num_episodes || "N/A" %>
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <!-- Status -->
+
+                        <div class="detail-tags">
+
+                            <span class="detail-tag">
+                                <%= data.status || "Unknown" %>
+                            </span>
+
+                            <% if (data.start_date) { %>
+
+                                <span class="detail-tag">
+                                    <%= data.start_date %>
+                                </span>
+
+                                <% } %>
+
+                                    <% if (data.end_date) { %>
+
+                                        <span class="detail-tag">
+                                            <%= data.end_date %>
+                                        </span>
+
+                                        <% } %>
+
+                        </div>
+
+
+                        <!-- Genres -->
+
+                        <% if (data.genres?.length) { %>
+
+                            <div class="genres">
+
+                                <% for (let genre of data.genres) { %>
+
+                                    <span class="genre">
+                                        <%= genre.name %>
+                                    </span>
+
+                                    <% } %>
+
+                            </div>
+
+                            <% } %>
+
+                    </div>
+
+                </section>
+
+                <form action="/watchlist/add" method="post" class="watchlist-form">
+
+                    <input type="hidden" name="mal_id" value="<%= data.id %>">
+
+                    <input type="hidden" name="title" value="<%= data.title %>">
+
+                    <input type="hidden" name="poster" value="<%= data.main_picture?.large || "" %>">
+
+                    <input type="hidden" name="media_type" value="<%= data.media_type || "" %>">
+
+                    <input type="hidden" name="synopsis" value="<%= data.synopsis || "" %>">
+
+                    <input type="hidden" name="episodes" value="<%= data.num_episodes || "" %>">
+
+                    <input type="hidden" name="status" value="<%= data.status || "" %>">
+
+                    <input type="hidden" name="start_date" value="<%= data.start_date || "" %>">
+
+                    <input type="hidden" name="end_date" value="<%= data.end_date || "" %>">
+
+                    <button type="submit" class="watchlist-button">
+                        <span class="watchlist-icon">＋</span>
+                        Add to Watchlist
+                    </button>
+
+                </form>
+
+
+                <!-- Synopsis -->
+
+                <section class="detail-section">
+
+                    <h2>
+                        Synopsis
+                    </h2>
+
+                    <p class="synopsis">
+
+                        <%= data.synopsis || "No synopsis available." %>
+
+                    </p>
+
+                </section>
+
+
+                <!-- Information -->
+
+                <section class="detail-section">
+
+                    <h2>
+                        Information
+                    </h2>
+
+
+                    <div class="information-grid">
+
+                        <div>
+                            <span class="info-label">Type</span>
+                            <span class="info-value">
+                                <%= data.media_type || "N/A" %>
+                            </span>
+                        </div>
+
+
+                        <div>
+                            <span class="info-label">Episodes</span>
+                            <span class="info-value">
+                                <%= data.num_episodes || "N/A" %>
+                            </span>
+                        </div>
+
+
+                        <div>
+                            <span class="info-label">Status</span>
+                            <span class="info-value">
+                                <%= data.status || "N/A" %>
+                            </span>
+                        </div>
+
+
+                        <div>
+                            <span class="info-label">Start Date</span>
+                            <span class="info-value">
+                                <%= data.start_date || "N/A" %>
+                            </span>
+                        </div>
+
+
+                        <div>
+                            <span class="info-label">End Date</span>
+                            <span class="info-value">
+                                <%= data.end_date || "N/A" %>
+                            </span>
+                        </div>
+
+
+                        <div>
+                            <span class="info-label">Studio</span>
+
+                            <span class="info-value">
+
+                                <% if (data.studios?.length) { %>
+
+                                    <%= data.studios.map(studio=> studio.name).join(", ") %>
+
+                                        <% } else { %>
+
+                                            N/A
+
+                                            <% } %>
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- Alternative Titles -->
+
+                <% if (data.alternative_titles) { %>
+
+                    <section class="detail-section">
+
+                        <h2>
+                            Alternative Titles
+                        </h2>
+
+                        <div class="alternative-titles">
+
+                            <% if (data.alternative_titles.ja) { %>
+
+                                <div>
+                                    <span class="info-label">Japanese</span>
+                                    <span class="info-value">
+                                        <%= data.alternative_titles.ja %>
+                                    </span>
+                                </div>
+
+                                <% } %>
+
+
+                                    <% if (data.alternative_titles.en) { %>
+
+                                        <div>
+                                            <span class="info-label">English</span>
+                                            <span class="info-value">
+                                                <%= data.alternative_titles.en %>
+                                            </span>
+                                        </div>
+
+                                        <% } %>
+
+                        </div>
+
+                    </section>
+
+                    <% } %>
+
+            </main>
+
+
+
+            <%- include("partials/footer") %>
