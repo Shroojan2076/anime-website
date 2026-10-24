@@ -102,36 +102,6 @@ export default function Home() {
           </div>
         )}
       </section>
-
-      {/* Why Choose Us / Features Grid */}
-      <section className="features-section">
-        <div className="feature-card">
-          <div className="feature-icon">🔍</div>
-          <h3>Comprehensive Database</h3>
-          <p>
-            Powered by the public MyAnimeList API v2 with full metadata, airing dates,
-            genres, studios, and synopsis.
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">📑</div>
-          <h3>Personalized Watchlist</h3>
-          <p>
-            Save titles to Watching, Completed, or Plan to Watch lists with simple status
-            switching and one-click episode increments.
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">⭐️</div>
-          <h3>Ratings & Progress Tracking</h3>
-          <p>
-            Give personal 1–10 star ratings and track your exact progress per episode
-            stored securely in your PostgreSQL database.
-          </p>
-        </div>
-      </section>
     </main>
   );
 }
